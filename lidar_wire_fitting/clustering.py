@@ -5,11 +5,9 @@ from sklearn.preprocessing import StandardScaler
 
 def cluster_wires(points: np.ndarray, eps: float = 0.5, min_samples: int = 10) -> np.ndarray:
     """
-    Cluster a point cloud into individual wires using DBSCAN.
+    Cluster wire points using DBSCAN. Returns label array; -1 = noise.
 
-    Using DBSCAN rather than K-means because we don't know the number of wires
-    ahead of time, and it handles noise/outlier points naturally (labels them -1).
-    Returns a label array of length N; -1 means noise.
+    DBSCAN works better than k-means
     """
     scaler = StandardScaler()
     points_scaled = scaler.fit_transform(points)
@@ -25,10 +23,7 @@ def cluster_wires(points: np.ndarray, eps: float = 0.5, min_samples: int = 10) -
 
 
 def get_clusters(points: np.ndarray, labels: np.ndarray) -> list:
-    """
-    Split the point array into a list of per-wire point arrays.
-    Noise points (label == -1) are excluded.
-    """
+    """Return list of point arrays, one per wire cluster (noise excluded)."""
     cluster_ids = sorted(set(labels) - {-1})
     clusters = []
     for cid in cluster_ids:
