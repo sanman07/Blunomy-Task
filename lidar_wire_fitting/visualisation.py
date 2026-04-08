@@ -71,7 +71,7 @@ def plot_results(
 
 def print_fit_summary(fits: list, file_name: str):
     """Print a quick summary of the fitting results to stdout."""
-    print(f"\n--- Results for {file_name} ---")
+    print(f"\nResults for {file_name}")
     valid_fits = [f for f in fits if f is not None]
     print(f"Wires detected: {len(valid_fits)}")
     for i, fit in enumerate(valid_fits):

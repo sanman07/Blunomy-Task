@@ -67,9 +67,9 @@ def process_file(filepath: str, save_plots: bool = False, output_dir: str = "out
 
 def main():
     parser = argparse.ArgumentParser(description="Fit catenary models to LiDAR wire data")
-    parser.add_argument("--input", required=True, help="Path to a .parquet file or directory of .parquet files")
-    parser.add_argument("--save-plots", action="store_true", help="Save plots to output/ instead of displaying")
-    parser.add_argument("--output-dir", default="output", help="Directory to save plots (default: output/)")
+    parser.add_argument("--input", required=True, help="path to a .parquet file, or a directory of them")
+    parser.add_argument("--save-plots", action="store_true", help="save plots to disk instead of popping up a window")
+    parser.add_argument("--output-dir", default="output", help="where to save plots (default: output/)")
     args = parser.parse_args()
 
     input_path = Path(args.input)

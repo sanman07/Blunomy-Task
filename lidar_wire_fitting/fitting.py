@@ -8,7 +8,7 @@ class CatenaryFit:
     """Result of fitting a catenary curve to a single wire cluster."""
     x0: float
     y0: float
-    c: float          # sag parameter — small = droopy, large = stiff
+    c: float          # sag parameter: small values mean droopy, large values mean stiff
 
     origin: np.ndarray
     pca_axes: np.ndarray  # shape (2, 3), used to project back to 3D
@@ -25,8 +25,9 @@ def project_to_2d(points: np.ndarray):
     """
     Project a 3D wire cluster into a 2D plane for catenary fitting.
 
-    We use PC1 (wire length direction) and PC3 (sag direction) from SVD —
-    not PC1+PC2, which gave a flat top-down view with no visible sag.
+    Uses PC1 (wire length) and PC3 (sag direction) from SVD. PC1+PC2 was the
+    first attempt, which gave a flat top-down projection with no sag visible at all.
+    PC3 is the right axis because Z variance is tiny compared to the X-Y span.
     """
     origin = points.mean(axis=0)
     centered = points - origin
@@ -39,7 +40,7 @@ def project_to_2d(points: np.ndarray):
 
 
 def fit_catenary(cluster_points: np.ndarray) -> CatenaryFit | None:
-    """Fit a catenary to one wire cluster. Returns None if curve_fit fails."""
+    """Fit a catenary to one wire cluster. Returns None if the fit doesn't converge."""
     if len(cluster_points) < 10:
         print("  Skipping cluster with fewer than 10 points")
         return None
@@ -48,13 +49,13 @@ def fit_catenary(cluster_points: np.ndarray) -> CatenaryFit | None:
     x_proj = coords_2d[:, 0]  # along wire
     y_proj = coords_2d[:, 1]  # sag direction
 
-    # Initial parameter guess
+    # starting guess: curve_fit is quite sensitive to these, so bad values will give wrong answers
     x0_init = float(np.mean(x_proj))
     y0_init = float(np.min(y_proj))
 
     sag = np.max(y_proj) - np.min(y_proj)
     span = np.max(x_proj) - np.min(x_proj)
-    c_init = max(span / max(sag, 0.1), 1.0)
+    c_init = max(span / max(sag, 0.1), 1.0)  # a taut wire gives a large c, a droopy one gives a small c
 
     try:
         popt, _ = curve_fit(

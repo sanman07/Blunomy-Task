@@ -14,7 +14,7 @@ def load_point_cloud(filepath: str) -> np.ndarray:
     required_cols = ["x", "y", "z"]
     for col in required_cols:
         if col not in df.columns:
-            raise ValueError(f"Expected column '{col}' not found. Got: {list(df.columns)}")
+            raise ValueError(f"Missing column '{col}'. Columns in file: {list(df.columns)}")
 
     points = df[required_cols].to_numpy(dtype=np.float64)
 

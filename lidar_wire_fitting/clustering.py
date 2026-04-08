@@ -1,19 +1,28 @@
 import numpy as np
 from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
+from numpy.linalg import svd
 
 
-def cluster_wires(points: np.ndarray, eps: float = 0.5, min_samples: int = 10) -> np.ndarray:
+def cluster_wires(points: np.ndarray, eps: float = 0.1, min_samples: int = 5) -> np.ndarray:
     """
-    Cluster wire points using DBSCAN. Returns label array; -1 = noise.
+    Cluster wire points by projecting onto the cross-wire axis first.
 
-    DBSCAN works better than k-means
+    3D DBSCAN kept merging multiple wires together because the wire separation only
+    exists in one direction (perpendicular to the wire run), so Z was just adding
+    noise to the distance calculation. Instead, we use PCA on X-Y to find that
+    cross-wire direction, then run DBSCAN on that single axis.
+
+    Labels of -1 indicate noise or unassigned points.
     """
-    scaler = StandardScaler()
-    points_scaled = scaler.fit_transform(points)
+    # find the wire direction from the X-Y spread
+    origin = points[:, :2].mean(axis=0)
+    centered_xy = points[:, :2] - origin
+    _, _, Vt = svd(centered_xy, full_matrices=False)
 
-    db = DBSCAN(eps=eps, min_samples=min_samples)
-    labels = db.fit_predict(points_scaled)
+    # PC2 is perpendicular to the wire — the axis that actually separates them
+    cross_wire = (centered_xy @ Vt[1]).reshape(-1, 1)
+
+    labels = DBSCAN(eps=eps, min_samples=min_samples).fit_predict(cross_wire)
 
     n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
     n_noise = np.sum(labels == -1)
